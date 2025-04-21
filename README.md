@@ -16,7 +16,7 @@ Estructura de Archivos:
   - script.js           → Lógica JavaScript para realizar la búsqueda por ISBN.
   - product-checker/
     - products.json     → Contiene los datos de los productos en formato JSON.
-    - sync.php          → Posiblemente se utiliza para sincronización de datos (no detallado aquí).
+    - sync.php          → Se utiliza sincronización de datos (no detallado aquí).
     - CO-1000.CSV       → Archivo CSV (propósito no especificado).
   - logo.png            → Imagen del logo.
   - favicon.ico         → Icono de la pestaña del navegador.
