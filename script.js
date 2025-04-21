@@ -55,7 +55,7 @@ async function buscarProducto() {
       resultadoDiv.innerHTML = `
         <strong>ISBN:</strong> ${producto.isbn}<br>
         <strong>Nombre:</strong> ${producto.name}<br>
-        <strong>Precio:</strong> $${precioFinal.toFixed(2)}
+        <strong>Precio:</strong> <span class="precio">$${new Intl.NumberFormat('es-CO').format(Math.round(precioFinal))}</span>
       `;
     } else {
       resultadoDiv.innerHTML = "Producto no encontrado.";
@@ -70,4 +70,5 @@ async function buscarProducto() {
   isbnInputEl.value = "";
   isbnInputEl.focus();
 }
+
 
