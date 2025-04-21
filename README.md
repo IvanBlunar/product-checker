@@ -21,28 +21,33 @@ Estructura de Archivos:
   - logo.png            → Imagen del logo.
   - favicon.ico         → Icono de la pestaña del navegador.
 
-Funcionamiento:
----------------
+
+## ⚙️ Funcionamiento
+
 1. El usuario abre la página `index.html`.
 2. Ingresa un ISBN en el campo de texto.
-3. Al presionar "Enter", se ejecuta la función `buscarProducto()` desde `script.js`.
-4. Esta función lee el archivo `products.json` y busca coincidencias con el ISBN ingresado.
-5. Si encuentra un producto, muestra la información en pantalla; si no, informa que no se encontró nada.
+3. Al presionar **Enter**, se ejecuta la función `buscarProducto()` desde `script.js`.
+4. Esta función:
+   - Lee el archivo `products.json`.
+   - Busca coincidencias con el ISBN ingresado.
+   - Muestra la información si encuentra una coincidencia.
+   - Muestra un mensaje de error si no encuentra nada o el campo está vacío.
 
-Requisitos:
------------
-- Navegador web moderno (con soporte para JavaScript ES6+).
-- Servidor web (por ejemplo, Apache o Nginx) para acceder correctamente a los archivos locales, especialmente `products.json`.
+## ✅ Requisitos
 
-Notas:
-------
-- Asegúrate de que el archivo `products.json` esté correctamente formateado y accesible.
-- Si necesitas actualizar los datos, puedes hacerlo directamente en `products.json` o usando `sync.php` si está configurado para eso.
+- Navegador web moderno (con soporte para JavaScript ES6+)
+- Servidor web local o en línea (por ejemplo, Apache o Nginx)
 
-Autor:
-------
-[Nombre del desarrollador o equipo, si aplica]
+## 📝 Notas
 
-Fecha:
-------
+- Asegúrate de que `products.json` esté correctamente formateado y accesible desde el navegador.
+- Puedes actualizar los datos manualmente o mediante `sync.php` si está configurado.
+
+## 👨‍💻 Autor
+
+**Iván Bello**  
+🌐 Sitio web: [https://productos.sanpablo.co](https://productos.sanpablo.co)
+
+## 📅 Fecha
+
 Abril 2025
