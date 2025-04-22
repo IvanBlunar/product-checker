@@ -83,4 +83,5 @@ button:hover {
 .precio {
   color: rgb(7, 202, 7);
   font-weight: bold;
+  font-size: 18px;
 }
