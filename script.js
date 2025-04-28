@@ -8,14 +8,34 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   input.focus();
+
+  const guardado = localStorage.getItem('producto');
+
+  if (guardado) {
+    const producto = JSON.parse(guardado);
+    const resultadoDiv = document.getElementById("resultado");
+
+    let precioFinal = parseFloat(producto.price.replace('.', '').replace(',', '.'));
+    if (producto.tax === "1") {
+      precioFinal *= 1.19;
+    }
+
+    resultadoDiv.innerHTML = `
+      <strong>ISBN:</strong> ${producto.isbn}<br>
+      <strong>Nombre:</strong> ${producto.name}<br>
+      <strong>Precio:</strong> <span class="precio">$${new Intl.NumberFormat('es-CO').format(Math.round(precioFinal))}</span>
+    `;
+
+    localStorage.removeItem('producto');
+  }
 });
 
-async function buscarProducto() {
+async function buscarProducto(desdeEscaner = false) {
   const isbnInputEl = document.getElementById("isbn");
   const isbnInput = isbnInputEl.value.trim();
   const resultadoDiv = document.getElementById("resultado");
 
-  resultadoDiv.innerHTML = ""; // Limpiar resultado anterior
+  resultadoDiv.innerHTML = "";
 
   if (!isbnInput) {
     resultadoDiv.innerHTML = "Por favor, ingresa un ISBN.";
@@ -23,7 +43,7 @@ async function buscarProducto() {
   }
 
   try {
-    const response = await fetch('/product-checker/products.json');
+    const response = await fetch('/product-checker/products.json'); // Asegúrate que esta ruta sea la correcta
 
     if (!response.ok) {
       throw new Error(`Error al cargar el archivo: ${response.status}`);
@@ -47,18 +67,54 @@ async function buscarProducto() {
     const producto = productos.find(p => p.isbn === isbnInput || p.isbn === '00000' + isbnInput);
 
     if (producto) {
-      let precioFinal = parseFloat(producto.price.replace('.', '').replace(',', '.'));
-      if (producto.tax === "1") {
+      localStorage.setItem('producto', JSON.stringify(producto));
+    } else {
+      localStorage.setItem('producto', JSON.stringify({
+        isbn: isbnInput,
+        name: "Producto no encontrado",
+        price: "0",
+        tax: "0"
+      }));
+    }
+
+    if (desdeEscaner) {
+      window.location.href = '/';
+    } else {
+      const prod = producto || {
+        isbn: isbnInput,
+        name: "Producto no encontrado",
+        price: "0",
+        tax: "0"
+      };
+
+      let precioFinal = parseFloat(prod.price.replace('.', '').replace(',', '.'));
+      if (prod.tax === "1") {
         precioFinal *= 1.19;
       }
 
-      resultadoDiv.innerHTML = `
-        <strong>ISBN:</strong> ${producto.isbn}<br>
-        <strong>Nombre:</strong> ${producto.name}<br>
-        <strong>Precio:</strong> <span class="precio">$${new Intl.NumberFormat('es-CO').format(Math.round(precioFinal))}</span>
-      `;
-    } else {
-      resultadoDiv.innerHTML = "Producto no encontrado.";
+let precioDescuento = precioFinal;
+let descuentoTexto = '';
+let precioSubrayado = '';
+
+if (producto.discount && !isNaN(parseFloat(producto.discount))) {
+  const porcentaje = parseFloat(producto.discount);
+  const descuento = precioFinal * (porcentaje / 100);
+  precioDescuento = precioFinal - descuento;
+
+  descuentoTexto = `<div style="color: red; font-weight: bold;">-${porcentaje}% de descuento</div>`;
+  precioSubrayado = `<s style="color: gray;">$${new Intl.NumberFormat('es-CO').format(Math.round(precioFinal))}</s>`;
+} else {
+  precioSubrayado = `$${new Intl.NumberFormat('es-CO').format(Math.round(precioFinal))}`;
+}
+
+resultadoDiv.innerHTML = `
+  <strong>ISBN:</strong> ${producto.isbn}<br>
+  <strong>Nombre:</strong> ${producto.name}<br>
+  <strong>Precio:</strong> <span class="precio">${precioSubrayado}</span><br>
+  ${descuentoTexto}
+  <strong>Precio Final:</strong> <span style="font-size: 1.2em; font-weight: bold;">$${new Intl.NumberFormat('es-CO').format(Math.round(precioDescuento))}</span>
+`;
+
     }
 
   } catch (error) {
@@ -66,9 +122,6 @@ async function buscarProducto() {
     console.error(error);
   }
 
-  // Limpiar input y volver a enfocar
   isbnInputEl.value = "";
   isbnInputEl.focus();
 }
-
-

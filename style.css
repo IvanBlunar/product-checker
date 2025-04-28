@@ -54,6 +54,7 @@ button {
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.3s ease;
+  margin-bottom: 0.75rem;
 }
 
 button:hover {
@@ -84,4 +85,15 @@ button:hover {
   color: rgb(7, 202, 7);
   font-weight: bold;
   font-size: 18px;
+}
+
+.precio.tachado {
+  text-decoration: line-through;
+  color: #888;
+}
+
+.descuento {
+  color: red;
+  font-weight: bold;
+  margin-top: 10px;
 }

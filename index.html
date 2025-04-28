@@ -5,16 +5,224 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Buscador de Productos</title>
   <link rel="stylesheet" href="./style.css"/>
+  <script src="https://unpkg.com/quagga/dist/quagga.min.js"></script>
 </head>
 <body>
   <div class="container">
     <img src="logo.png" alt="Logo" class="logo" />
     <h1>🔍 Buscar Producto</h1>
-    <input type="text" id="isbn" placeholder="Escanea o escribe el ISBN" autofocus />
+    <input type="text" id="isbn" placeholder="Escanea con lector o escribe el ISBN" autofocus />
     <button onclick="buscarProducto()">Buscar</button>
+    <button onclick="activarCamara()">Escanear desde móvil</button>
     <div id="resultado"></div>
+    <video id="videoCamara" style="width: 100%; height: auto; display: none;"></video>
   </div>
 
-  <script src="script.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const input = document.getElementById("isbn");
+
+      input.addEventListener("keydown", async (e) => {
+        if (e.key === "Enter") {
+          await buscarProducto();
+        }
+      });
+
+      input.focus();
+
+      const guardado = localStorage.getItem('producto');
+
+      if (guardado) {
+        const producto = JSON.parse(guardado);
+        const resultadoDiv = document.getElementById("resultado");
+
+        let precioFinal = parseFloat(producto.price.replace('.', '').replace(',', '.'));
+        if (producto.tax === "1") {
+          precioFinal *= 1.19;
+        }
+
+        let precioDescuento = precioFinal;
+        let descuentoTexto = '';
+        let precioSubrayado = '';
+        let mostrarPrecioFinal = true;
+
+        // Verifica si hay descuento
+        if (producto.discount && !isNaN(parseFloat(producto.discount)) && parseFloat(producto.discount) > 0) {
+          const porcentaje = parseFloat(producto.discount);
+          const descuento = precioFinal * (porcentaje / 100);
+          precioDescuento = precioFinal - descuento;
+
+          descuentoTexto = `<div style="color: red; font-weight: bold;">-${porcentaje}% de descuento</div>`;
+          precioSubrayado = `<s style="color: gray;">$${new Intl.NumberFormat('es-CO').format(Math.round(precioFinal))}</s>`;
+        } else {
+          precioSubrayado = `$${new Intl.NumberFormat('es-CO').format(Math.round(precioFinal))}`;
+          mostrarPrecioFinal = false;
+        }
+
+        resultadoDiv.innerHTML = `
+          <strong>ISBN:</strong> ${producto.isbn}<br>
+          <strong>Nombre:</strong> ${producto.name}<br>
+          <strong>Precio:</strong> <span class="precio">${precioSubrayado}</span><br>
+          ${descuentoTexto}
+          ${mostrarPrecioFinal ? `<strong>Precio Final:</strong> <span style="font-size: 1.2em; font-weight: bold; color: rgb(7, 202, 7);">$${new Intl.NumberFormat('es-CO').format(Math.round(precioDescuento))}</span>` : ''}
+        `;
+
+        localStorage.removeItem('producto');
+      }
+    });
+
+    async function buscarProducto(desdeEscaner = false) {
+      const isbnInputEl = document.getElementById("isbn");
+      const isbnInput = isbnInputEl.value.trim();
+      const resultadoDiv = document.getElementById("resultado");
+
+      resultadoDiv.innerHTML = "";
+
+      if (!isbnInput) {
+        resultadoDiv.innerHTML = "Por favor, ingresa un ISBN.";
+        return;
+      }
+
+      try {
+        const response = await fetch('/product-checker/products.json'); // Asegúrate que esta ruta sea la correcta
+
+        if (!response.ok) {
+          throw new Error(`Error al cargar el archivo: ${response.status}`);
+        }
+
+        const productosRaw = await response.json();
+
+        const productos = productosRaw.map(entry => {
+          const key = Object.keys(entry)[0];
+          const campos = key.split('|');
+          const valores = entry[key].split('|');
+
+          const producto = {};
+          campos.forEach((campo, index) => {
+            producto[campo] = valores[index] || "";
+          });
+
+          return producto;
+        });
+
+        const producto = productos.find(p => p.isbn === isbnInput || p.isbn === '00000' + isbnInput);
+
+        if (producto) {
+          // Guarda el descuento también
+          localStorage.setItem('producto', JSON.stringify(producto));
+        } else {
+          localStorage.setItem('producto', JSON.stringify({
+            isbn: isbnInput,
+            name: "Producto no encontrado",
+            price: "0",
+            tax: "0",
+            discount: "0"
+          }));
+        }
+
+        if (desdeEscaner) {
+          window.location.href = '/';
+        } else {
+          const prod = producto || {
+            isbn: isbnInput,
+            name: "Producto no encontrado",
+            price: "0",
+            tax: "0",
+            discount: "0"
+          };
+
+          let precioFinal = parseFloat(prod.price.replace('.', '').replace(',', '.'));
+          if (prod.tax === "1") {
+            precioFinal *= 1.19;
+          }
+
+          let precioDescuento = precioFinal;
+          let descuentoTexto = '';
+          let precioSubrayado = '';
+          let mostrarPrecioFinal = true;
+
+          // Verifica si hay descuento
+          if (prod.discount && !isNaN(parseFloat(prod.discount)) && parseFloat(prod.discount) > 0) {
+            const porcentaje = parseFloat(prod.discount);
+            const descuento = precioFinal * (porcentaje / 100);
+            precioDescuento = precioFinal - descuento;
+
+            descuentoTexto = `<div style="color: red; font-weight: bold;">-${porcentaje}% de descuento</div>`;
+            precioSubrayado = `<s style="color: gray;">$${new Intl.NumberFormat('es-CO').format(Math.round(precioFinal))}</s>`;
+          } else {
+            precioSubrayado = `$${new Intl.NumberFormat('es-CO').format(Math.round(precioFinal))}`;
+            mostrarPrecioFinal = false;
+          }
+
+          resultadoDiv.innerHTML = `
+            <strong>ISBN:</strong> ${prod.isbn}<br>
+            <strong>Nombre:</strong> ${prod.name}<br>
+            <strong>Precio:</strong> <span class="precio">${precioSubrayado}</span><br>
+            ${descuentoTexto}
+            ${mostrarPrecioFinal ? `<strong>Precio Final:</strong> <span style="font-size: 1.2em; font-weight: bold; color: rgb(7, 202, 7);">$${new Intl.NumberFormat('es-CO').format(Math.round(precioDescuento))}</span>` : ''}
+          `;
+        }
+
+      } catch (error) {
+        resultadoDiv.innerHTML = `Error: ${error.message}`;
+        console.error(error);
+      }
+
+      isbnInputEl.value = "";
+      isbnInputEl.focus();
+    }
+
+    function activarCamara() {
+      const videoElement = document.getElementById('videoCamara');
+
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+          .then((stream) => {
+            videoElement.srcObject = stream;
+            videoElement.style.display = 'block';
+            videoElement.play();
+            iniciarEscaneo();
+          })
+          .catch((error) => {
+            console.error("Error al acceder a la cámara: ", error);
+            alert("No se pudo acceder a la cámara.");
+          });
+      } else {
+        alert("Tu navegador no soporta la API de la cámara.");
+      }
+    }
+
+    function iniciarEscaneo() {
+      Quagga.init({
+        inputStream: {
+          type: 'LiveStream',
+          target: document.getElementById('videoCamara'),
+        },
+        decoder: {
+          readers: ["ean_reader", "ean_8_reader", "upc_reader", "code_128_reader"],
+        },
+      }, function(err) {
+        if (err) {
+          console.log(err);
+          alert("Error al iniciar el escáner");
+          return;
+        }
+        Quagga.start();
+      });
+
+      Quagga.onDetected(function(result) {
+        const code = result.codeResult.code;
+
+        if (code.startsWith("978") || code.startsWith("7702") || code.startsWith("2422")) {
+          if (navigator.vibrate) navigator.vibrate(200);
+          Quagga.stop();
+          document.getElementById('isbn').value = code;
+          buscarProducto(true);
+        } else {
+          console.log("Código ignorado:", code);
+        }
+      });
+    }
+  </script>
 </body>
 </html>
