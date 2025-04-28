@@ -1,5 +1,5 @@
 <?php
-$ftp_server = "ftp.tuservidor.com"; // Cambia esto por tu servidor FTP|
+$ftp_server = "ftp.tuservidor.com"; 
 $ftp_user = "tu_usuario";
 $ftp_pass = "tu_contraseña";
 $remote_file = "/Ejemplo.CSV";

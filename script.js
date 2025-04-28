@@ -43,8 +43,7 @@ async function buscarProducto(desdeEscaner = false) {
   }
 
   try {
-    const response = await fetch('/product-checker/products.json'); // Asegúrate que esta ruta sea la correcta
-
+    const response = await fetch('/product-checker/products.json'); 
     if (!response.ok) {
       throw new Error(`Error al cargar el archivo: ${response.status}`);
     }
